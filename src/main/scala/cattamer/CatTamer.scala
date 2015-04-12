@@ -1,6 +1,7 @@
 package cattamer
 
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 import akka.actor.{Props, Actor}
 import cats.abstractcat.Cat
@@ -16,20 +17,16 @@ import scala.util.Random
  */
 class CatTamer(myCat:Cat,returnPeriodInSeconds:Long) extends Actor with LazyLogging {
 
-  val prob : Double = (1/returnPeriodInSeconds.toDouble) * Math.pow(1 - (1/returnPeriodInSeconds.toDouble), returnPeriodInSeconds - 1)
-
-  def nextPeriod = probStream.takeWhile(t => !t).size
+  def nextPeriod = (Math.log(1-Random.nextDouble())/(-1/returnPeriodInSeconds.toDouble)).toLong
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def actInTheFuture(wait:Long) = {
-    logger.info("{} will act in {} seconds.",myCat.name,wait.toString)
+    logger.info("{} will act in {} ({} seconds).",myCat.name,pretty(wait),wait.toString)
     context.system.scheduler.scheduleOnce(wait seconds,self, ActOnMyOwn)
   }
 
-  println(s"${myCat.name} prob is $prob")
-
-  def probStream : Stream[Boolean] = (Random.nextDouble() < prob) #:: probStream
+  println(s"${myCat.name} return period is $returnPeriodInSeconds")
 
   actInTheFuture(nextPeriod)
 
@@ -44,6 +41,15 @@ class CatTamer(myCat:Cat,returnPeriodInSeconds:Long) extends Actor with LazyLogg
   }
 
   case object ActOnMyOwn
+
+  def pretty(nextEvent:Long) : String = {
+    val seconds = nextEvent % 60
+    val minutes = (nextEvent / 60) % 60
+    val hours = (nextEvent / (60 * 60)) % 24
+    val days = (nextEvent / (60 * 60) / 24) % 7
+    val weeks = nextPeriod / (60 * 60) / 24 / 7
+    f"${weeks}w ${days}d $hours%02d:$minutes%02d:$seconds%02d}"
+  }
 }
 
 object CatTamer {
@@ -51,6 +57,6 @@ object CatTamer {
     val catClass = this.getClass.getClassLoader.loadClass(config.getString("class"))
     val catConstructor = catClass.getConstructor(classOf[String],classOf[Config])
     val cat = catConstructor.newInstance(name,config).asInstanceOf[Cat]
-    Props(classOf[CatTamer],cat,config.getLong("returnPeriodInSeconds"))
+    Props(classOf[CatTamer],cat,config.getDuration("returnPeriod",TimeUnit.SECONDS))
   }
 }
