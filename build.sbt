@@ -1,10 +1,10 @@
 name := "CatsOfUlthar"
 
-version := "1.0"
+organization := "org.mousehole"
+
+version := "0.1.0-SNAPSHOT"
 
 scalaVersion := "2.11.6"
-
-libraryDependencies += "org.fusesource" % "sigar" % "1.6.4"
 
 parallelExecution in Test := false
 
@@ -28,4 +28,11 @@ libraryDependencies += "io.spray" %%  "spray-http" % "1.3.1"
 
 libraryDependencies += "io.spray" %%  "spray-routing" % "1.3.1"
 
+libraryDependencies +=  "org.scalaj" %% "scalaj-http" % "1.1.4"
+
 libraryDependencies += "com.typesafe.akka" % "akka-stream-experimental_2.11" % "1.0-M2"
+
+publishTo := Some(Resolver.file("file",  new File(Path.userHome.absolutePath+"/.m2/repository")))
+
+packAutoSettings
+
