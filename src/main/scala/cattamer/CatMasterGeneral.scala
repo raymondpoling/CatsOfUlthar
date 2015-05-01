@@ -2,6 +2,7 @@ package cattamer
 
 import akka.actor.{Actor, Props}
 import cattamer.CatMasterGeneral.{AllCats, CatList, Request}
+import cattamer.CatTamer.{Enable, Disable}
 import com.typesafe.config.{Config, ConfigObject}
 import message.Act
 
@@ -16,6 +17,8 @@ class CatMasterGeneral(config:ConfigObject) extends Actor {
 
   override def receive: Receive = {
     case Request(name) => cats.get(name).map(_ ! Act)
+    case e@Enable(name) => cats.get(name).map(_ ! e)
+    case d@Disable(name) => cats.get(name).map(_ ! d)
     case CatList => sender ! AllCats(cats.keySet.toList)
   }
 }
