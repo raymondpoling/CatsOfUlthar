@@ -1,8 +1,8 @@
-package builder
+package org.mousehole.ulthar.builder
 
 import akka.stream._
 import akka.stream.scaladsl._
-import output.EndPoint
+import org.mousehole.ulthar.output.EndPoint
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -81,5 +81,18 @@ case class EventGeneratorBuilder[Event,State,Output](
 
   def generatorSource[GEvent,GState](otherGenerator: EventGeneratorBuilder[GEvent, GState, Event])(implicit ec : ExecutionContext) = {
     this.copy(input = otherGenerator.partialBuild()::input)
+  }
+
+  def createEventN(i: Int, seed: Event) : EventGeneratorBuilder[Event,State,Output] = {
+    def iterator() = new Iterator[Event] {
+      var count = 0
+      override def hasNext: Boolean = count < i
+
+      override def next(): Event = {
+        count += 1
+        seed
+      }
+    }
+    this.copy(input = Source.fromIterator(iterator)::input)
   }
 }

@@ -2,15 +2,14 @@ package example
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ActorSystem, Cancellable}
-import akka.stream.{ActorMaterializer, ClosedShape, Graph, Materializer}
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
+import org.mousehole.ulthar.builder.EventGeneratorBuilder
 import org.specs2.mutable.Specification
-import output.EndPoint
-import builder.EventGeneratorBuilder
+import org.mousehole.ulthar.output.EndPoint
+
 import scala.collection.mutable
-import scala.concurrent.ExecutionContextExecutor
-import scala.concurrent.duration.{FiniteDuration, Duration}
-import scala.util.{Success, Try, Failure}
+import scala.concurrent.duration.Duration
 
 
 /**
@@ -111,7 +110,7 @@ class Example1 extends Specification {
 
 
       val example2 = EventGeneratorBuilder[Output,State,Output](Continue(""))
-        .simpleEventRate(Duration(700,TimeUnit.MILLISECONDS),Output("mirku"))
+        .simpleEventRate(Duration(700,TimeUnit.MILLISECONDS),Output("mike"))
         .output((t: Output) => t.str, new PrintToQueue(queue1))
         .generator {
           case (_, Seed(str)) =>
@@ -121,9 +120,31 @@ class Example1 extends Specification {
         .generatorSource(example1)
       example2.build.run
       eventually {
-        queue1 must contain("mirku")
+        queue1 must contain("mike")
         queue1 must contain("stt")
       }
+      mat.shutdown()
+      success
+    }
+
+    "Create only a limited number of events" in {
+      val queue = new mutable.Queue[String]()
+      implicit val system = ActorSystem("example1")
+      implicit val mat = ActorMaterializer()
+      example
+        .noInput
+        .createEventN(20,Seed("cat"))
+        .output((t: Output) => t.str, new PrintToQueue(queue))
+        .generator({
+          case (_, Seed(str)) =>
+            (Continue(str), Output(str))
+          case (Seed(o), Continue(str)) => (Continue(new StringBuilder(str).append(o).toString()), Output(str))
+        }).build.run
+      eventually {
+        queue.size must be_==(20)
+      }
+      Thread.sleep(500)
+      queue.size must be_==(20)
       mat.shutdown()
       success
     }
