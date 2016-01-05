@@ -10,6 +10,8 @@ parallelExecution in Test := false
 
 resolvers += "Spray" at "http://repo.spray.io"
 
+libraryDependencies += "com.typesafe.akka" % "akka-stream-experimental_2.11" % "2.0.1"
+
 libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.3.6"
 
 libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.3.6" % "test"
@@ -30,7 +32,10 @@ libraryDependencies += "io.spray" %%  "spray-routing" % "1.3.1"
 
 libraryDependencies +=  "org.scalaj" %% "scalaj-http" % "1.1.4"
 
-libraryDependencies += "com.typesafe.akka" % "akka-stream-experimental_2.11" % "1.0-M2"
+libraryDependencies += "com.typesafe.akka" % "akka-stream-experimental_2.11" % "2.0.1"
+
+libraryDependencies += "org.specs2" %% "specs2-core" % "2.4.15" % "test"
+
 
 publishTo := Some(Resolver.file("file",  new File(Path.userHome.absolutePath+"/.m2/repository")))
 
